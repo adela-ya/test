@@ -1,0 +1,15 @@
+.DS_Store
+.git
+.gitignore
+README.md
+node_modules
+npm-debug.log
+.env
+.env.*
+Dockerfile
+*.Dockerfile
+
+
+# To prevent storing dev/temporary container data
+*.csv
+/tmp/*
