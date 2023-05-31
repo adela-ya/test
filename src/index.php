@@ -8,8 +8,30 @@ function dump($var) {
     echo '</pre>';
 }
 
+
+include('classes/TelegramApiProvider.php');
+
+
+$class = new TelegramApiProvider();
+$class->getMessage();
+
+
+
+
+$bottoken = '6143340979:AAFxnTSm3Dv2XvXV2qtP-BYU7DQS79tQHWE';
+
+$content = file_get_contents('https://api.telegram.org/bot' . $bottoken . '/getUpdates');
+dump($content);
+
+//$text = $content["message"]["text"];
+//в массиве хранится история сообщений бота
+$data = json_decode($content, true);
+//выясняем размер массива – количество сообщений
+$n = count($data['result']);
+//получаем текст последнего
+$text = $data['result'][$n - 1]['message']['text'];
+
 //$token = "6143340979:AAFxnTSm3Dv2XvXV2qtP-BYU7DQS79tQHWE";
-$chat_id = -946151414;
 //
 //$textMessage = "Тестовое сообщение";
 //$textMessage = urlencode($textMessage);
@@ -19,8 +41,6 @@ $chat_id = -946151414;
 //$result = file_get_contents($urlQuery);
 //
 
-$token = "6143340979:AAFxnTSm3Dv2XvXV2qtP-BYU7DQS79tQHWE";
-//
 //$getQuery = array(
 //    "chat_id" 	=> -946151414,
 //    "text"  	=> "Новое сообщение из формы",
@@ -34,18 +54,6 @@ $token = "6143340979:AAFxnTSm3Dv2XvXV2qtP-BYU7DQS79tQHWE";
 //curl_close($ch);
 
 //echo $resultQuery;
-$bottoken = '6143340979:AAFxnTSm3Dv2XvXV2qtP-BYU7DQS79tQHWE';
-
-$content = file_get_contents('https://api.telegram.org/bot' . $bottoken . '/getUpdates');
-dump($content);
-
-//$text = $content["message"]["text"];
-//в массиве хранится история сообщений бота
-$data = json_decode($content, true);
-//выясняем размер массива – количество сообщений
-$n = count($data['result']);
-//получаем текст последнего
-$text = $data['result'][$n - 1]['message']['text'];
 
 //var_dump($text);
 
@@ -63,119 +71,3 @@ $text = $data['result'][$n - 1]['message']['text'];
 //$output = curl_exec($con);
 //
 
-if (!empty($text)) {
-//    $text_array = explode(" ", $text);
-
-    // получим текущее состояние бота, если оно есть
-//    $bot_state = get_bot_state ($chat_id);
-
-    // если текущее состояние бота отправка заявки, то отправим заявку менеджеру компании на $order_chat_id
-
-
-    // вывод информации Помощь
-    if ($text === '/help') {
-        $text_return = "Привет, вот команды, что я понимаю:
-    /help - список команд
-    /getUser - Получить данные текущего пользователя по API
-    /getCountries - Получить список стран по API";
-        message_to_telegram($bottoken, $chat_id, $text_return);
-    }
-    elseif ($text === '/getUser') {
-        $user = getUserData();
-        $text_return = "Получить данные текущего пользователя по API:
-         \n id - ". $user['id']. "\n name - " . $user["name"];
-
-        message_to_telegram($bottoken, $chat_id, $text_return);
-    }
-    elseif ($text === '/getCountries') {
-        $countries = getCountries();
-        $text_return = "Список стран по API:" . $countries;
-        message_to_telegram($bottoken, $chat_id, $text_return);
-    }
-}
- function message_to_telegram($bottoken, $chat_id, $text, $reply_markup = '')
-{
-    $ch = curl_init();
-    $ch_post = [
-        CURLOPT_URL => 'https://api.telegram.org/bot' . $bottoken . '/sendMessage',
-        CURLOPT_POST => TRUE,
-        CURLOPT_RETURNTRANSFER => TRUE,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_POSTFIELDS => [
-            'chat_id' => $chat_id,
-            'parse_mode' => 'HTML',
-            'text' => $text,
-            'reply_markup' => $reply_markup,
-        ]
-    ];
-
-    curl_setopt_array($ch, $ch_post);
-    curl_exec($ch);
-}
-
-
-
-function getCountries(){
-    $apiToken = "f2821815a1934aadc2af92ba879348d9";
-
-    $url      =  "http://api.leads.su/webmaster/geo/getCountries?token=". $apiToken;
-
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_HEADER, false);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_URL, $url);
-
-    $responce = curl_exec($curl);
-
-    $status    = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $lastError = curl_error($curl);
-    curl_close($curl);
-
-    $result = json_decode($responce, true);
-//dump($result);
-
-
-    $countries = array();
-    foreach ($result['data'] as $res) {
-//    var_dump($res);
-        $countries[] = $res['name'];
-    }
-//var_dump($countries);
-
-    rsort($countries);
-
-    $outputCountries = array_slice($countries, 0, 10);
-//$str = implode(', ', $outputCountries);
-//dump($str);
-    return implode(', ', $outputCountries);
-}
-
-function getUserData() {
-    $apiToken = "f2821815a1934aadc2af92ba879348d9";
-
-
-    $url = "http://api.leads.su/webmaster/account?token=" . $apiToken;
-
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_HEADER, false);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-    curl_setopt($curl, CURLOPT_URL, $url);
-
-    $responce = curl_exec($curl);
-
-    $status    = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $lastError = curl_error($curl);
-    curl_close($curl);
-
-    $result = json_decode($responce, true);
-
-    $userData = array(
-        "id"   => $result['data']['id'],
-        "name" => $result['data']['name']
-    );
-
-//var_dump($userData);
-    return $userData;
-
-}
